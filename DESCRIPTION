@@ -1,0 +1,9 @@
+Package: multiparental
+Title: An R package for visualization and analysis of haplotypes in experimental crosses
+Description: Tools for analyzing and plotting genotype and haplotype data from multiparental populations like the Collaborative Cross and Diversity Outbred
+Version: 0.2.1
+Author: Andrew P. Morgan <andrew.parker.morgan@gmail.com>
+Maintainer: Andrew P. Morgan <andrew.parker.morgan@gmail.com>
+License: MIT
+LazyLoad: yes
+Imports: GenomicRanges, ggplot2, scales, grid, gridExtra, plyr

@@ -1,0 +1,28 @@
+# imports/exports
+import(GenomicRanges, ggplot2, scales, grid, gridExtra, plyr)
+export(	roll.haplotypes,
+	roll.recombinations,
+	invert.recombinations,
+	overlap.with.meta,
+	grep.haplotypes,
+	grep.recombinations,
+	find.recombinants,
+	seal.segments,
+	flatten.haplotypes,
+	mapping.intervals,
+	calc.hap.dosage,
+	hk.regress,
+	map.single.locus,
+	ggqtlplot,
+	trans_genome,
+	scale_x_genome,
+	scale_fill_CC,
+	scale_colour_CC,
+	ggtitle.n,
+	theme_genome,
+	gggenome,
+	plot.haplotypes,
+	plot.stacked.haps )
+
+# S3 methods
+S3method(plot, haplotypes)
