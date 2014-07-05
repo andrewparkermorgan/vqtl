@@ -1,4 +1,12 @@
+## perform genome scan for vQTL
 scanone.vqtl <- function(x, pheno.col = 1, covar = NULL, method = c("hk"), scramble = NULL, drop = NULL, ...) {
+	
+	## x = a qtl::cross object
+	## pheno.col = index to trait in dataframe of phenotypes (can also be character vector giving colname)
+	## covar = RHS-only model formula specifying which trait(s) to use as covariates in the scan
+	## method = which regression model to use when doing the mapping (TODO: add options besides HK)
+	## scramble = numeric vector giving a valid permutation of the phenotypes (to let me easily re-use this function in permutation testing)
+	## drop = row indices or rownames to omit (ie. known outliers)
 	
 	## obtain phenotype; permute it if requested
 	phe <- x$pheno[ ,pheno.col ]
@@ -22,12 +30,18 @@ scanone.vqtl <- function(x, pheno.col = 1, covar = NULL, method = c("hk"), scram
 		stop("Methods other than Haley-Knott-like not yet implemented.")
 	}
 
+	## make result a qtl::scanone object, for easy summaries and plotting with R/qtl functions
 	class(rez) <- c("scanone", class(rez))
 	return(rez)
 	
 }
 
+## do permutations to obtain significance thresholds
 scanoneperm.vqtl <- function(x, ..., n.perm = 500) {
+	
+	## x = a qtl::cross object
+	## n.perm = how many permutations to do
+	## ... are additional arguments passed into scanone.vqtl()
 	
 	require(plyr)
 	reps <- laply(1:n.perm, function(i) { max(scanone.vqtl(x, ..., scramble = sample.int(nind(x)))$chisq, na.rm = TRUE) },
@@ -35,11 +49,12 @@ scanoneperm.vqtl <- function(x, ..., n.perm = 500) {
 	
 }
 
+## workhorse function for actually doing vQTL mapping via HK regression
 scanone.vqtl.hk <- function(x, phe, covar, drop, ...) {
 	
 	require(plyr)
 	
-	## find missing phenotypes; dglm.fit() can't handle them
+	## find missing phenotypes; dglm.fit() can't handle missing data
 	keep <- is.finite(phe)
 	missing <- which(!keep)
 	
@@ -58,7 +73,7 @@ scanone.vqtl.hk <- function(x, phe, covar, drop, ...) {
 		options(na.action = old.na.act)
 	}
 	
-	
+	## helper function to scan a single chromosome, to be called in an l*ply() over elements of <x>
 	.scanone.vqtl.hk.chrom <- function(chrom, ...) {
 		geno <- chrom$prob
 		rez <- ldply(1:(dim(geno)[2]), function(i) test.vqtl.locus(phe[keep], geno[ keep,i, ], covar.mat[ keep, ], ...))
@@ -68,7 +83,10 @@ scanone.vqtl.hk <- function(x, phe, covar, drop, ...) {
 		return(rez)
 	}
 	
+	## actually do the scan
 	rez <- ldply(x$geno, .scanone.vqtl.hk.chrom, ...)
+	
+	## clean up result and make it look like a qtl::scanone object
 	rez <- cbind(chr = names(x$geno[ rez[,1] ]), rez)
 	rez$.id <- NULL
 	attr(rez, "missing") <- missing
@@ -76,6 +94,7 @@ scanone.vqtl.hk <- function(x, phe, covar, drop, ...) {
 	
 }
 
+## perform single-locus HK regression using DGLM
 test.vqtl.locus <- function(phe, geno, covar, type = c("f2","bc"), mode = c("additive","dominant"), ...) {
 	
 	type <- match.arg(type)
@@ -97,6 +116,7 @@ test.vqtl.locus <- function(phe, geno, covar, type = c("f2","bc"), mode = c("add
 	
 }
 
+## helper function to get design matrix for genetic effects, given 2d matrix of genotype probabilities
 get.geno.design.matrix <- function(geno, intercept = TRUE, mode = c("additive","dominant"), ...) {
 	
 	mode <- match.arg(mode)
@@ -114,7 +134,7 @@ get.geno.design.matrix <- function(geno, intercept = TRUE, mode = c("additive","
 	
 	## add dominance deviation, maybe
 	if (mode == "dominant" & ncol(geno) > 2)
-			X <- cbind(X, geno[ ,1 ])
+			X <- cbind(X, geno[ ,2 ])
 	
 	return(X)
 	
