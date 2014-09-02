@@ -1,4 +1,4 @@
-vqtl
+R/vqtl
 ====
 
 This package implements several methods for mapping variance-controlling loci (vQTL) in experimental crosses, whose input and output are compatible with Karl Broman's `R/qtl` (http://www.rqtl.org/).  Also included are functions for producing (static) QTL charts with `ggplot2`.
